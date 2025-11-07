@@ -1,0 +1,193 @@
+from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin
+# Create your views here.
+from django.views import View
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model
+from django.contrib import messages
+from django.utils import timezone
+from django.core.mail import send_mail
+import random
+
+from .models import PasswordResetOTP
+from .forms import RegisterForm, LoginForm, ForgotPasswordForm, OTPForm, ResetPasswordForm
+
+User = get_user_model()
+
+
+def home(request):
+    return render(request, 'base.html')
+
+class RegisterView(View):
+    template_name = 'Accounts/register.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
+
+    def post(self, request):
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        # 🔹 1. Validate passwords
+        if password1 != password2:
+            messages.error(request, "Passwords do not match.")
+            return redirect('register')
+
+        # 🔹 2. Check username/email existence
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect('register')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered.")
+            return redirect('register')
+
+        # 🔹 3. Create user
+        user = User.objects.create_user(username=username, email=email, password=password1)
+        user.save()
+
+        messages.success(request, "Account created successfully! Please log in.")
+        return redirect('login')
+# class RegisterView(View):
+#     template_name = 'Accounts/register.html'
+
+#     def get(self, request):
+#         return render(request, self.template_name, {'form': RegisterForm()})
+
+#     def post(self, request):
+#         form = RegisterForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, 'Account created successfully!')
+#             return redirect('login')
+#         messages.error(request, 'Please correct the errors below.')
+#         return render(request, self.template_name, {'form': form})
+
+
+class LoginView(View):
+    template_name = 'Accounts/login.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': LoginForm()})
+
+    def post(self, request):
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user:
+                login(request, user)
+                return redirect('profile')
+            else:
+                messages.error(request, 'Invalid username or password.')
+        return render(request, self.template_name, {'form': form})
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('login')
+
+
+class ForgotPasswordView(View):
+    template_name = 'Accounts/forgot_password.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': ForgotPasswordForm()})
+
+    def post(self, request):
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                user = User.objects.get(email=email)
+                otp = str(random.randint(100000, 999999))
+                PasswordResetOTP.objects.create(user=user, otp=otp)
+
+                send_mail(
+                    'Your OTP for Password Reset',
+                    f'Your OTP is {otp}',
+                    None,
+                    [email],
+                    fail_silently=False,
+                )
+
+                request.session['email'] = email
+                messages.success(request, 'OTP sent to your email.')
+                return redirect('verify_otp')
+            except User.DoesNotExist:
+                messages.error(request, 'Email not found.')
+        return render(request, self.template_name, {'form': form})
+
+
+class VerifyOTPView(View):
+    template_name = 'Accounts/verify_otp.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': OTPForm()})
+
+    def post(self, request):
+        form = OTPForm(request.POST)
+        email = request.session.get('email')
+        if not email:
+            messages.error(request, 'Session expired. Please try again.')
+            return redirect('forgot_password')
+
+        if form.is_valid():
+            otp = form.cleaned_data['otp']
+            try:
+                user = User.objects.get(email=email)
+                record = PasswordResetOTP.objects.filter(user=user, otp=otp).last()
+                if record and timezone.now() - record.created_at < timezone.timedelta(minutes=5):
+                    record.delete()
+                    request.session['verified_email'] = email
+                    messages.success(request, 'OTP verified. Reset your password.')
+                    return redirect('reset_password')
+                else:
+                    messages.error(request, 'Invalid or expired OTP.')
+            except User.DoesNotExist:
+                messages.error(request, 'Email not found.')
+        return render(request, self.template_name, {'form': form})
+
+
+class ResetPasswordView(View):
+    template_name = 'Accounts/reset_password.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': ResetPasswordForm()})
+
+    def post(self, request):
+        form = ResetPasswordForm(request.POST)
+        email = request.session.get('verified_email')
+        if not email:
+            messages.error(request, 'Session expired. Please start again.')
+            return redirect('forgot_password')
+
+        if form.is_valid():
+            password1 = form.cleaned_data['password1']
+            password2 = form.cleaned_data['password2']
+            if password1 != password2:
+                messages.error(request, 'Passwords do not match.')
+                return redirect('reset_password')
+
+            try:
+                user = User.objects.get(email=email)
+                user.set_password(password1)
+                user.save()
+                messages.success(request, 'Password reset successful! You can now login.')
+                del request.session['verified_email']
+                return redirect('login')
+            except User.DoesNotExist:
+                messages.error(request, 'User not found.')
+        return render(request, self.template_name, {'form': form})
+
+
+class ProfileView(LoginRequiredMixin, View):
+    template_name = 'Accounts/profile.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'user': request.user})
