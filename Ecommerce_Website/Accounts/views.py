@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.mail import send_mail
 import random
+from products.models import Category
 
 from .models import PasswordResetOTP
 from .forms import RegisterForm, LoginForm, ForgotPasswordForm, OTPForm, ResetPasswordForm
@@ -17,7 +18,9 @@ User = get_user_model()
 
 
 def home(request):
-    return render(request, 'base.html')
+    # Show home page with categories for all users
+    categories = Category.objects.filter(is_active=True)[:4]
+    return render(request, 'Accounts/home.html', {'categories': categories})
 
 class RegisterView(View):
     template_name = 'Accounts/register.html'
@@ -81,7 +84,7 @@ class LoginView(View):
             user = authenticate(request, username=username, password=password)
             if user:
                 login(request, user)
-                return redirect('profile')
+                return redirect('home')
             else:
                 messages.error(request, 'Invalid username or password.')
         return render(request, self.template_name, {'form': form})
@@ -190,4 +193,23 @@ class ProfileView(LoginRequiredMixin, View):
     template_name = 'Accounts/profile.html'
 
     def get(self, request):
-        return render(request, self.template_name, {'user': request.user})
+        from cart.models import Cart, CartItem
+        
+        # Get user's cart information
+        try:
+            cart = Cart.objects.get(user=request.user)
+            cart_items = CartItem.objects.filter(cart=cart)
+            cart_item_count = cart_items.count()
+            cart_total = cart.get_total_price()
+        except Cart.DoesNotExist:
+            cart = None
+            cart_item_count = 0
+            cart_total = 0
+        
+        context = {
+            'user': request.user,
+            'cart': cart,
+            'cart_item_count': cart_item_count,
+            'cart_total': cart_total,
+        }
+        return render(request, self.template_name, context)

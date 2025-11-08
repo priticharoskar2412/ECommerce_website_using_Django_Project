@@ -2,36 +2,135 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-<div class="container mt-5 col-md-6">
-    <div class="card shadow p-4">
-        <h3 class="text-center mb-4">My Profile</h3>
+<div class="container mt-4">
+    <div class="row">
+        <!-- Profile Information Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-circle"></i> Profile Information</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-info">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Username:</label>
+                        <p class="form-control-plaintext fs-5">{{ user.username }}</p>
+                    </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">Username:</label>
-            <p class="form-control-plaintext">{{ user.username }}</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Email:</label>
+                        <p class="form-control-plaintext fs-5">{{ user.email }}</p>
+                    </div>
+
+                    {% if user.first_name or user.last_name %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Full Name:</label>
+                        <p class="form-control-plaintext fs-5">{{ user.first_name }} {{ user.last_name }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Account Status:</label>
+                        <p class="form-control-plaintext">
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                            {% if user.is_staff %}
+                                <span class="badge bg-info">Staff</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Member Since:</label>
+                        <p class="form-control-plaintext">{{ user.date_joined|date:"F d, Y" }}</p>
+                    </div>
+
+                    {% if user.last_login %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Last Login:</label>
+                        <p class="form-control-plaintext">{{ user.last_login|date:"F d, Y g:i A" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">Email:</label>
-            <p class="form-control-plaintext">{{ user.email }}</p>
-        </div>
+        <!-- Cart & Statistics Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-cart-check"></i> Shopping Cart</h4>
+                </div>
+                <div class="card-body">
+                    {% if cart_item_count > 0 %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Items in Cart:</label>
+                        <p class="form-control-plaintext fs-4 text-primary">{{ cart_item_count }} item{{ cart_item_count|pluralize }}</p>
+                    </div>
 
-        {% if user.first_name or user.last_name %}
-        <div class="mb-3">
-            <label class="form-label fw-bold">Full Name:</label>
-            <p class="form-control-plaintext">{{ user.first_name }} {{ user.last_name }}</p>
-        </div>
-        {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Cart Total:</label>
+                        <p class="form-control-plaintext fs-4 text-success">₹{{ cart_total }}</p>
+                    </div>
 
-        <div class="text-center mt-4">
-            <a href="{% url 'home' %}" class="btn btn-secondary me-2">🏠 Home</a>
-            <a href="{% url 'logout' %}" class="btn btn-danger">🚪 Logout</a>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'cart:cart_view' %}" class="btn btn-primary">
+                            <i class="bi bi-cart"></i> View Cart
+                        </a>
+                        <a href="{% url 'cart:checkout' %}" class="btn btn-success">
+                            <i class="bi bi-bag-check"></i> Proceed to Checkout
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-cart-x" style="font-size: 3rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3">Your cart is empty</p>
+                        <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                            <i class="bi bi-shop"></i> Start Shopping
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="bi bi-lightning-charge"></i> Quick Actions</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-grid"></i> All Products
+                        </a>
+                        <a href="{% url 'cart:cart_view' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-cart"></i> My Cart
+                        </a>
+                        <a href="{% url 'forgot_password' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-key"></i> Change Password
+                        </a>
+                        <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
