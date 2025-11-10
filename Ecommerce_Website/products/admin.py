@@ -16,3 +16,8 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('available', 'category', 'brand')
     search_fields = ('name', 'sku', 'tags')
     prepopulated_fields = {'slug': ('name',)}
+
+@admin.register(WishlistItem)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ('user','product','added_at')
+
