@@ -62,5 +62,10 @@ class Product(models.Model):
             return round(((self.price - self.discount_price) / self.price) * 100, 2)
         return 0
 
+    class WishlistItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wished_by')
+    added_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):   
         return self.name
