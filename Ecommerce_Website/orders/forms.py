@@ -1,6 +1,5 @@
 from django import forms
 from .models import Order, OrderItem
-from review.models import Product
 
 
 class OrderForm(forms.ModelForm):
