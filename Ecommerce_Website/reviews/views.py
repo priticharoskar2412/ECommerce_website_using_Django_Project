@@ -4,10 +4,10 @@ from .models import ProductReview
 from products.models import Product  # Import Product model
 
 
-def product_detail(request, pk):
+def product_detaill(request, pk):
     """This view is not needed if you already have one in products app."""
     product = get_object_or_404(Product, pk=pk)
-    return render(request, 'products/product_detail.html', {'product': product})
+    return render(request, 'reviews/product_detaill.html', {'product': product})
 
 
 @login_required
