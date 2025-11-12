@@ -93,3 +93,12 @@ class ProductDeleteView(DeleteView):
     model = Product
     template_name = 'products/delete_product.html'
     success_url = reverse_lazy('products:product_list')
+
+class WishlistView(LoginRequiredMixin, ListView):
+    model = WishlistItem
+    template_name = 'store/wishlist.html'
+    context_object_name = 'items'
+
+    def get_queryset(self):
+        return WishlistItem.objects.filter(user=self.request.user).select_related('product')
+
