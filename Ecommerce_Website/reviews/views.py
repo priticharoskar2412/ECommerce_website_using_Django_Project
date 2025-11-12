@@ -1,40 +1,39 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import ProductReview
-from products.models import Product  # Import Product model
-
-
-def product_detaill(request, pk):
-    """This view is not needed if you already have one in products app."""
-    product = get_object_or_404(Product, pk=pk)
-    return render(request, 'reviews/product_detaill.html', {'product': product})
-
+from products.models import Product
+from .forms import ReviewForm
+from .models import Review
 
 @login_required
-def add_product_review(request, product_id):
-    """Add a new review for a specific product."""
+def add_review(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
-    if request.method == 'POST':
-        rating = request.POST.get('rating')
-        comment = request.POST.get('comment')
-
-        # Create and save review
-        ProductReview.objects.create(
-            product=product,
-            user=request.user,
-            rating=rating,
-            comment=comment
-        )
-
-        # ✅ redirect to product detail page (in products app)
+    # Prevent duplicate reviews
+    existing_review = Review.objects.filter(product=product, user=request.user).first()
+    if existing_review:
+        messages.info(request, "You have already reviewed this product.")
         return redirect('products:product_detail', pk=product.id)
 
-    return render(request, 'reviews/add_review.html', {'product': product})
+    if request.method == "POST":
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = product
+            review.user = request.user
+            review.save()
+            messages.success(request, "Thank you for reviewing this product!")
+            return render(request, 'reviews/thank_you.html', {'product': product})
+    else:
+        form = ReviewForm()
+
+    return render(request, 'reviews/add_review.html', {'form': form, 'product': product})
 
 
 def product_reviews(request, product_id):
-    """Show all reviews for a specific product."""
     product = get_object_or_404(Product, id=product_id)
-    reviews = product.reviews.all()
-    return render(request, 'reviews/review_list.html', {'product': product, 'reviews': reviews})
+    reviews = product.reviews.all().order_by('-created_at')
+    return render(request, 'products/product_detail.html', {
+        'product': product,
+        'reviews': reviews
+    })
