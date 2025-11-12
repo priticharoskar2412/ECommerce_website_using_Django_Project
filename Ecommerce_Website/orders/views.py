@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from decimal import Decimal
 from .models import Order, OrderItem
 from .forms import OrderForm
-from reviews.models import Product
+from products.models import Product
 
 
 class OrderCreateView(LoginRequiredMixin, View):
