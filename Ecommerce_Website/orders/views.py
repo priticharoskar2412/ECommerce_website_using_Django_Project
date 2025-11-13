@@ -9,6 +9,7 @@ from decimal import Decimal
 from .models import Order, OrderItem
 from .forms import OrderForm
 from products.models import Product
+from cart.views import get_cart
 
 
 class OrderCreateView(LoginRequiredMixin, View):
@@ -17,26 +18,17 @@ class OrderCreateView(LoginRequiredMixin, View):
     
     def get(self, request):
         form = OrderForm()
-        return render(request, self.template_name, {'form': form, 'page_title': 'Checkout'})
-    
-    @transaction.atomic
-    def post(self, request):
-        form = OrderForm(request.POST)
-        if not form.is_valid():
-            return render(request, self.template_name, {'form': form, 'page_title': 'Checkout'})
-        
-        cart_items = request.session.get('cart', {})
-        if not cart_items:
-            messages.error(request, 'Your cart is empty.')
-            return redirect('orders:create')
-        
-        subtotal = Decimal('0.00')
+        # Build cart summary for the checkout page
+        cart = get_cart(request)
+        cart_items_qs = cart.items.select_related('product') if cart else None
+
         items_data = []
-        
-        for product_id, item_data in cart_items.items():
-            try:
-                product = Product.objects.get(id=int(product_id))
-                quantity = item_data.get('quantity', 1)
+        subtotal = Decimal('0.00')
+
+        if cart_items_qs and cart_items_qs.exists():
+            for ci in cart_items_qs:
+                product = ci.product
+                quantity = ci.quantity
                 price = product.discount_price if product.discount_price else product.price
                 item_subtotal = price * quantity
                 subtotal += item_subtotal
@@ -46,9 +38,86 @@ class OrderCreateView(LoginRequiredMixin, View):
                     'price': price,
                     'subtotal': item_subtotal
                 })
-            except Product.DoesNotExist:
-                continue
-        
+        else:
+            session_cart = request.session.get('cart', {})
+            for product_id, item_data in session_cart.items():
+                try:
+                    product = Product.objects.get(id=int(product_id))
+                    quantity = item_data.get('quantity', 1)
+                    price = product.discount_price if product.discount_price else product.price
+                    item_subtotal = price * quantity
+                    subtotal += item_subtotal
+                    items_data.append({
+                        'product': product,
+                        'quantity': quantity,
+                        'price': price,
+                        'subtotal': item_subtotal
+                    })
+                except Product.DoesNotExist:
+                    continue
+
+        tax = subtotal * Decimal('0.10') if subtotal > 0 else Decimal('0.00')
+        shipping_cost = Decimal('50.00') if subtotal > 0 else Decimal('0.00')
+        total = subtotal + tax + shipping_cost
+
+        return render(request, self.template_name, {
+            'form': form,
+            'page_title': 'Checkout',
+            'cart_items': items_data,
+            'subtotal': subtotal,
+            'tax': tax,
+            'shipping_cost': shipping_cost,
+            'total': total,
+        })
+    
+    @transaction.atomic
+    def post(self, request):
+        form = OrderForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {'form': form, 'page_title': 'Checkout'})
+        # Prefer using the site's Cart model (if cart exists for user or session)
+        cart = get_cart(request)
+        cart_items_qs = cart.items.select_related('product') if cart else None
+
+        items_data = []
+        subtotal = Decimal('0.00')
+
+        if cart_items_qs and cart_items_qs.exists():
+            for ci in cart_items_qs:
+                product = ci.product
+                quantity = ci.quantity
+                price = product.discount_price if product.discount_price else product.price
+                item_subtotal = price * quantity
+                subtotal += item_subtotal
+                items_data.append({
+                    'product': product,
+                    'quantity': quantity,
+                    'price': price,
+                    'subtotal': item_subtotal
+                })
+        else:
+            # Fallback to session-based cart (legacy or anonymous carts stored in session)
+            session_cart = request.session.get('cart', {})
+            if not session_cart:
+                messages.error(request, 'Your cart is empty.')
+                return redirect('orders:create')
+
+            for product_id, item_data in session_cart.items():
+                try:
+                    product = Product.objects.get(id=int(product_id))
+                    quantity = item_data.get('quantity', 1)
+                    price = product.discount_price if product.discount_price else product.price
+                    item_subtotal = price * quantity
+                    subtotal += item_subtotal
+                    items_data.append({
+                        'product': product,
+                        'quantity': quantity,
+                        'price': price,
+                        'subtotal': item_subtotal
+                    })
+                except Product.DoesNotExist:
+                    continue
+
         if not items_data:
             messages.error(request, 'No valid items in cart.')
             return redirect('orders:create')
@@ -71,8 +140,15 @@ class OrderCreateView(LoginRequiredMixin, View):
                 price=item['price'],
                 subtotal=item['subtotal']
             )
-        
-        request.session['cart'] = {}
+        # Clear the cart: remove cart items if using the Cart model, otherwise clear session cart
+        try:
+            if cart and hasattr(cart, 'items'):
+                cart.items.all().delete()
+            else:
+                request.session['cart'] = {}
+        except Exception:
+            # In case clearing cart fails, at least clear session representation
+            request.session['cart'] = {}
         messages.success(request, f'Order {order.order_number} created!')
         return redirect('orders:detail', order_id=order.id)
 
