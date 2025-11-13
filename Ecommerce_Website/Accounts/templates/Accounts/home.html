@@ -1,41 +1,151 @@
 {% extends 'base.html' %}
-{% block title %}Home - My E-Commerce{% endblock %}
+{% block title %}Dressify{% endblock %}
 
 {% block content %}
+<style>
+/* ---------- General Styling ---------- */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(120deg, #007bff, #6610f2);
+    color: white;
+    text-align: center;
+    padding: 100px 20px;
+    border-radius: 0 0 30px 30px;
+}
+.hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+}
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+/* Categories */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Featured Products */
+.featured-products {
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 60px 20px;
+}
+.featured-products h2 {
+    font-weight: 700;
+    margin-bottom: 40px;
+}
+.feature-card {
+    border: none;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.feature-card img {
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+.feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Testimonials */
+.testimonials {
+    background-color: #cbd3e9;
+    padding: 60px 20px;
+    border-radius: 20px;
+}
+.testimonial-card {
+    background: rgb(244, 247, 198);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+.testimonial-card p {
+    font-style: italic;
+    color: #fc7373;
+}
+.testimonial-card h6 {
+    font-weight: 700;
+    margin-top: 10px;
+    color: #0d6efd;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+.btn-primary:hover {
+    background-color: #084298;
+}
+/* 🌟 Style Trends Section */
+.card:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.card-title {
+    color: #0d6efd;
+}
+
+.card img {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+/* Footer Section */
+.footer {
+    background: #212529;
+    color: #ddd;
+    padding: 30px 0;
+    text-align: center;
+    border-radius: 20px 20px 0 0;
+}
+</style>
+
 <!-- Hero Section -->
-<div class="container-fluid bg-primary text-white py-5 mb-5">
-    <div class="container text-center">
-        <h1 class="display-4 fw-bold mb-3">Welcome to My E-Commerce</h1>
-        <p class="lead mb-4">Discover amazing products at great prices</p>
-        <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
-    </div>
+<div class="hero">
+    <h1>Welcome to Dressify</h1>
+    <p>Discover amazing products at great prices</p>
+    <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
 </div>
 
 <!-- Categories Section -->
 <div class="container my-5">
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h2 class="display-5 mb-3">Shop by Category</h2>
-            <p class="text-muted">Browse our wide range of products</p>
-        </div>
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">Shop by Category</h2>
+        <p class="text-muted">Browse our wide range of products</p>
     </div>
-
     <div class="row g-4">
         {% for category in categories %}
         <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm border-0">
+            <div class="card h-100 border-0 shadow-sm">
                 <a href="{% url 'products:category_products' category.slug %}" class="text-decoration-none text-dark">
                     {% if category.image %}
                     <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}" style="height: 200px; object-fit: cover;">
                     {% else %}
-                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
                         <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
                     </div>
                     {% endif %}
                     <div class="card-body text-center">
                         <h5 class="card-title">{{ category.name }}</h5>
                         {% if category.description %}
-                        <p class="card-text text-muted small">{{ category.description|truncatewords:10 }}</p>
+                        <p class="text-muted small">{{ category.description|truncatewords:10 }}</p>
                         {% endif %}
                         <button class="btn btn-primary btn-sm mt-2">View Products</button>
                     </div>
@@ -43,25 +153,89 @@
             </div>
         </div>
         {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <p class="mb-0">No categories available at the moment.</p>
+        <div class="col-12 text-center">
+            <div class="alert alert-info">No categories available at the moment.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Featured Products Section -->
+<!-- <div class="container featured-products my-5">
+    <div class="text-center mb-5">
+        <h2>✨ Featured Products ✨</h2>
+        <p class="text-muted">Our handpicked bestsellers</p>
+    </div>
+    <div class="row g-4">
+        {% for product in featured_products %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card feature-card h-100 text-center">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                <div class="card-body">
+                    <h5 class="fw-bold">{{ product.name }}</h5>
+                    <p class="text-muted">₹{{ product.price }}</p>
+                    <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary btn-sm">View Details</a>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
+</div> -->
 
-    <!-- View All Categories Link -->
-    {% if categories %}
-    <div class="row mt-5">
-        <div class="col-12 text-center">
-            <a href="{% url 'products:category_list' %}" class="btn btn-outline-primary btn-lg">View All Categories</a>
+<!-- 🌟 Style Trends Section -->
+<!-- 🌟 Style Trends Section -->
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="display-6 fw-bold text-primary">Dressify 2025</h2>
+        <p class="text-muted">Stay ahead with the latest fashion inspirations</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Trend 1 -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800" 
+                     class="card-img-top" alt="Casual Chic" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">Casual Chic</h5>
+                    <p class="text-muted">Minimal, comfy, and effortlessly stylish — perfect for every day.</p>
+                    <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend 2 -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800" 
+                     class="card-img-top" alt="Ethnic Elegance" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">Ethnic Elegance</h5>
+                    <p class="text-muted">Traditional wear meets modern comfort and vibrant colors.</p>
+                    <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend 3 -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800" 
+                     class="card-img-top" alt="Street Vibe" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">Street Vibe</h5>
+                    <p class="text-muted">Urban, bold, and expressive — where comfort meets cool.</p>
+                    <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+                </div>
+            </div>
         </div>
     </div>
-    {% endif %}
 </div>
 
-<!-- Additional Features Section -->
+
+
+
+
 <div class="container my-5">
     <div class="row g-4">
         <div class="col-md-4 text-center">
@@ -87,5 +261,35 @@
         </div>
     </div>
 </div>
-{% endblock %}
+<!-- Testimonials Section -->
+<div class="container testimonials my-5">
+    <div class="text-center mb-5">
+        <h2>💬 What Our Customers Say 💬</h2>
+        <p class="text-muted">Hear from our happy shoppers</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="testimonial-card">
+                <p>“Loved the quality and design! The fabric is super comfortable.”</p>
+                <h6>- Yash Wagh</h6>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="testimonial-card">
+                <p>“Fast delivery and great prices. Dressify is my go-to for fashion!”</p>
+                <h6>- Rajesh Yadav</h6>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="testimonial-card">
+                <p>“Amazing variety! The site is easy to use and products are stylish.”</p>
+                <h6>- Sakshi Mehta</h6>
+            </div>
+        </div>
 
+
+    </div>
+</div>
+
+
+{% endblock %}
