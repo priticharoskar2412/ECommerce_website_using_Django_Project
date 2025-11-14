@@ -14,4 +14,9 @@ urlpatterns = [
     path('add/', views.ProductCreateView.as_view(), name='add_product'),
     path('update/<int:pk>/', views.ProductUpdateView.as_view(), name='update_product'),
     path('delete/<int:pk>/', views.ProductDeleteView.as_view(), name='delete_product'),
+
+    # Wishlist
+    path('wishlist/', views.WishlistView.as_view(), name='wishlist'),
+    path("wishlist/add/<int:product_id>/", AddToWishlistView.as_view(), name="add_wishlist"),
+    path("wishlist/remove/<int:product_id>/", RemoveFromWishlistView.as_view(), name="remove_wishlist"),
 ]
