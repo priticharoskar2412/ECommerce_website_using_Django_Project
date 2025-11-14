@@ -1,1 +1,10 @@
+{% if user.is_authenticated %}
+  {% if product in user.wishlist.all.values_list('product', flat=True) %}
+    <a href="{% url 'store:remove_from_wishlist' product.id %}" class="btn-wishlist remove">♥ Remove from Wishlist</a>
+  {% else %}
+    <a href="{% url 'store:add_to_wishlist' product.id %}" class="btn-wishlist add">♡ Add to Wishlist</a>
+  {% endif %}
+{% else %}
+  <a href="{% url 'login' %}?next={{ request.path }}" class="btn-wishlist">♡ Add to Wishlist</a>
+{% endif %}
 
