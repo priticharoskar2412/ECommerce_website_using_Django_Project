@@ -70,6 +70,26 @@ class RegisterView(View):
 #         return render(request, self.template_name, {'form': form})
 
 
+# class LoginView(View):
+#     template_name = 'Accounts/login.html'
+
+#     def get(self, request):
+#         return render(request, self.template_name, {'form': LoginForm()})
+
+#     def post(self, request):
+#         form = LoginForm(request.POST)
+#         if form.is_valid():
+#             username = form.cleaned_data['username']
+#             password = form.cleaned_data['password']
+#             user = authenticate(request, username=username, password=password)
+#             if user:
+#                 login(request, user)
+#                 return redirect('home')
+#             else:
+#                 messages.error(request, 'Invalid username or password.')
+#         return render(request, self.template_name, {'form': form})
+
+
 class LoginView(View):
     template_name = 'Accounts/login.html'
 
@@ -81,6 +101,13 @@ class LoginView(View):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+
+            # Ensure we have a session and remember the pre-login anonymous session key
+            if not request.session.session_key:
+                request.session.create()
+            # Store pre-login session key so signal can merge that cart after login (session rotates)
+            request.session['anon_cart_session_key'] = request.session.session_key
+
             user = authenticate(request, username=username, password=password)
             if user:
                 login(request, user)
@@ -88,6 +115,7 @@ class LoginView(View):
             else:
                 messages.error(request, 'Invalid username or password.')
         return render(request, self.template_name, {'form': form})
+
 
 
 class LogoutView(View):
