@@ -23,7 +23,7 @@ class ProductListView(ListView):
     model = Product
     template_name = 'products/product_list.html'
     context_object_name = 'products'
-    paginate_by = 6  # Optional pagination
+    paginate_by = 10  # Optional pagination
 
     def get_queryset(self):
         query = self.request.GET.get('q')

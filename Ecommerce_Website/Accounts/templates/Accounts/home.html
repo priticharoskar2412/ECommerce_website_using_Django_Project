@@ -92,19 +92,32 @@ body {
     background-color: #084298;
 }
 /* 🌟 Style Trends Section */
-.card:hover {
-    transform: translateY(-5px);
+.trend-card {
+    cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.trend-card:hover {
+    transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.trend-card img {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.trend-card:hover img {
+    transform: scale(1.05);
 }
 
 .card-title {
     color: #0d6efd;
 }
 
-.card img {
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
+a:hover .trend-card {
+    text-decoration: none;
 }
 
 /* Footer Section */
@@ -118,11 +131,11 @@ body {
 </style>
 
 <!-- Hero Section -->
-<div class="hero">
+<!-- <div class="hero">
     <h1>Welcome to Dressify</h1>
     <p>Discover amazing products at great prices</p>
     <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
-</div>
+</div> -->
 
 <!-- Categories Section -->
 <div class="container my-5">
@@ -182,8 +195,8 @@ body {
     </div>
 </div> -->
 
-<!-- 🌟 Style Trends Section -->
-<!-- 🌟 Style Trends Section -->
+<!--  Style Trends Section -->
+<!--  Style Trends Section -->
 <div class="container my-5">
     <div class="text-center mb-5">
         <h2 class="display-6 fw-bold text-primary">Dressify 2025</h2>
@@ -193,41 +206,47 @@ body {
     <div class="row g-4">
         <!-- Trend 1 -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800" 
-                     class="card-img-top" alt="Casual Chic" style="height: 250px; object-fit: cover;">
-                <div class="card-body text-center">
-                    <h5 class="card-title fw-bold">Casual Chic</h5>
-                    <p class="text-muted">Minimal, comfy, and effortlessly stylish — perfect for every day.</p>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+            <a href="{% url 'products:product_list' %}" class="text-decoration-none text-dark">
+                <div class="card border-0 shadow-sm h-100 trend-card">
+                    <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800" 
+                         class="card-img-top" alt="Casual Chic" style="height: 250px; object-fit: cover;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-bold">Casual Chic</h5>
+                        <p class="text-muted">Minimal, comfy, and effortlessly stylish — perfect for every day.</p>
+                        <span class="btn btn-outline-primary btn-sm">Explore</span>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Trend 2 -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800" 
-                     class="card-img-top" alt="Ethnic Elegance" style="height: 250px; object-fit: cover;">
-                <div class="card-body text-center">
-                    <h5 class="card-title fw-bold">Ethnic Elegance</h5>
-                    <p class="text-muted">Traditional wear meets modern comfort and vibrant colors.</p>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+            <a href="{% url 'products:product_list' %}" class="text-decoration-none text-dark">
+                <div class="card border-0 shadow-sm h-100 trend-card">
+                    <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800" 
+                         class="card-img-top" alt="Ethnic Elegance" style="height: 250px; object-fit: cover;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-bold">Ethnic Elegance</h5>
+                        <p class="text-muted">Traditional wear meets modern comfort and vibrant colors.</p>
+                        <span class="btn btn-outline-primary btn-sm">Explore</span>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Trend 3 -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800" 
-                     class="card-img-top" alt="Street Vibe" style="height: 250px; object-fit: cover;">
-                <div class="card-body text-center">
-                    <h5 class="card-title fw-bold">Street Vibe</h5>
-                    <p class="text-muted">Urban, bold, and expressive — where comfort meets cool.</p>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Explore</a>
+            <a href="{% url 'products:product_list' %}" class="text-decoration-none text-dark">
+                <div class="card border-0 shadow-sm h-100 trend-card">
+                    <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800" 
+                         class="card-img-top" alt="Street Vibe" style="height: 250px; object-fit: cover;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-bold">Street Vibe</h5>
+                        <p class="text-muted">Urban, bold, and expressive — where comfort meets cool.</p>
+                        <span class="btn btn-outline-primary btn-sm">Explore</span>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 </div>
