@@ -10,6 +10,17 @@
           <form method="post" action="{% url 'wishlist_toggle' item.product.id %}" style="display:inline;">
             {% csrf_token %}
             <button type="submit">Remove</button>
+
+            {% if user.is_authenticated %}
+  {% if product in user.wishlist.all.values_list('product', flat=True) %}
+    <a href="{% url 'product:remove_from_wishlist' product.id %}" class="btn-wishlist remove">♥ Remove from Wishlist</a>
+  {% else %}
+    <a href="{% url 'product:add_to_wishlist' product.id %}" class="btn-wishlist add">♡ Add to Wishlist</a>
+  {% endif %}
+{% else %}
+  <a href="{% url 'login' %}?next={{ request.path }}" class="btn-wishlist">♡ Add to Wishlist</a>
+{% endif %}
+
           </form>
         </li>
       {% endfor %}
@@ -18,3 +29,4 @@
     <p>Your wishlist is empty.</p>
   {% endif %}
 {% endblock %}
+
