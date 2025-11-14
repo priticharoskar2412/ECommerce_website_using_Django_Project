@@ -95,11 +95,39 @@ class ProductDeleteView(DeleteView):
     template_name = 'products/delete_product.html'
     success_url = reverse_lazy('products:product_list')
 
-class WishlistView(LoginRequiredMixin, ListView):
-    model = WishlistItem
-    template_name = 'store/wishlist.html'
-    context_object_name = 'items'
+
+class WishlistView(LoginRequiredMixin, View):
+    def get(self, request):
+        items = WishlistItem.objects.filter(user=request.user)
+        return render(request, "wishlist.html", {"items": items})
+
+
+    
+    
+class AddToWishlistView(LoginRequiredMixin, View):
+    def post(self, request, product_id):
+        product = get_object_or_404(Product, id=product_id)
+
+        item, created = WishlistItem.objects.get_or_create(
+            user=request.user, product=product
+        )
+
+        return JsonResponse({"added": created})
+
+
+class RemoveFromWishlistView(LoginRequiredMixin, View):
+    def post(self, request, product_id):
+        product = get_object_or_404(Product, id=product_id)
+
+        WishlistItem.objects.filter(user=request.user, product=product).delete()
+
+        return JsonResponse({"removed": True})    
+    
+
 
     def get_queryset(self):
-        return WishlistItem.objects.filter(user=self.request.user).select_related('product')
+        return WishlistItem.objects.filter(user=self.request.user).select_related('product')    
+    
+
+   
 
