@@ -12,6 +12,11 @@ from products.models import Product
 from cart.views import get_cart
 
 
+import razorpay
+from django.conf import settings
+
+
+
 class OrderCreateView(LoginRequiredMixin, View):
     """Create a new order (checkout)"""
     template_name = 'orders/order_create.html'
@@ -212,3 +217,51 @@ def cancel_order(request, order_id):
         return redirect('orders:detail', order_id=order.id)
     
     return redirect('orders:detail', order_id=order.id)
+
+
+
+# def start_payment(request):
+#     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+#     amount = 50000  # 500 = ₹500
+
+#     order_data = {
+#         "amount": amount,
+#         "currency": "INR",
+#         "payment_capture": "1",
+#     }
+
+#     order = client.order.create(data=order_data)
+
+#     return render(request, "orders/payment.html", {
+#         "order_id": order["id"],
+#         "amount": amount,
+#         "key_id": settings.RAZORPAY_KEY_ID
+#     })
+
+def start_payment(request):
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+    # 1️⃣ Get the order you want to pay for
+    order_id = request.GET.get("order_id")
+    order = Order.objects.get(id=order_id)
+
+    # 2️⃣ Convert rupees → paise
+    amount_rupees = order.total
+    amount_paise = int(amount_rupees * 100)
+
+    # 3️⃣ Create order in Razorpay
+    order_data = {
+        "amount": amount_paise,
+        "currency": "INR",
+        "payment_capture": "1",
+    }
+
+    razorpay_order = client.order.create(data=order_data)
+
+    return render(request, "orders/payment.html", {
+        "order_id": razorpay_order["id"],
+        "amount": amount_paise,
+        "amount_rupees": amount_rupees,
+        "key_id": settings.RAZORPAY_KEY_ID,
+    })

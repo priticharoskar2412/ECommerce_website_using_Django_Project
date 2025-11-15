@@ -8,5 +8,7 @@ urlpatterns = [
     path('', views.OrderListView.as_view(), name='list'),
     path('<int:order_id>/', views.OrderDetailView.as_view(), name='detail'),
     path('<int:order_id>/success/', views.OrderSuccessView.as_view(), name='success'),
-    path('<int:order_id>/cancel/', views.cancel_order, name='cancel'),
+    path('<int:order_id>/cancel/', views.cancel_order, name='cancel_order'),
+
+    path('payment/', views.start_payment, name='start_payment'),
 ]

@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block title %}{{ page_title }}{% endblock %}
+{% block carousel %}{% endblock %}
 
 {% block content %}
 <div class="container my-5">
@@ -39,7 +40,7 @@
                     <td>{{ order.get_payment_method_display }}</td>
                     <td>{{ order.created_at|date:"M d, Y" }}</td>
                 !    <td>
-                        <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-primary">View</a>
+                        <a href="{% url 'orders:detail' order.id %}" class="btn btn-sm btn-primary">View</a>
                     </td>
                 </tr>
                 {% endfor %}

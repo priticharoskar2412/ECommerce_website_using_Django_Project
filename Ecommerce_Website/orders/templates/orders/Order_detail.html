@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}{{ page_title }}{% endblock %}
-
+{% block carousel %}{% endblock %}
 {% block content %}
 <div class="container my-5">
     <div class="row">
@@ -117,7 +117,7 @@
             {% if order.status != 'cancelled' and order.status != 'delivered' and order.status != 'refunded' %}
             <div class="card">
                 <div class="card-body">
-                    <form method="post" action="{% url 'cancel_order' order.id %}" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                    <form method="post" action="{% url 'orders:cancel_order' order.id %}" onsubmit="return confirm('Are you sure you want to cancel this order?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger w-100">Cancel Order</button>
                     </form>
@@ -129,7 +129,8 @@
 
     <div class="row mt-3">
         <div class="col-md-12">
-            <a href="{% url 'order_list' %}" class="btn btn-secondary">Back to Orders</a>
+            <a href="{% url 'orders:list' %}" class="btn btn-secondary">Back to Orders</a>
+            <a href="{% url 'orders:start_payment' %}?order_id={{ order.id }}" class="btn btn-primary float-end">Make Payment</a>
         </div>
     </div>
 </div>
