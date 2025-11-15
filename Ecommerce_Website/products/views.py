@@ -102,13 +102,6 @@ class WishlistView(LoginRequiredMixin, View):
         return render(request, "wishlist.html", {"items": items})
 
 
-    
-    
-
-
-        return JsonResponse({"removed": True})    
-    
-
 
     def get_queryset(self):
         return WishlistItem.objects.filter(user=self.request.user).select_related('product')    
