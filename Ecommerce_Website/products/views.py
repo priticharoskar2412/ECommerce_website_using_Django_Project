@@ -104,22 +104,7 @@ class WishlistView(LoginRequiredMixin, View):
 
     
     
-class AddToWishlistView(LoginRequiredMixin, View):
-    def post(self, request, product_id):
-        product = get_object_or_404(Product, id=product_id)
 
-        item, created = WishlistItem.objects.get_or_create(
-            user=request.user, product=product
-        )
-
-        return JsonResponse({"added": created})
-
-
-class RemoveFromWishlistView(LoginRequiredMixin, View):
-    def post(self, request, product_id):
-        product = get_object_or_404(Product, id=product_id)
-
-        WishlistItem.objects.filter(user=request.user, product=product).delete()
 
         return JsonResponse({"removed": True})    
     
