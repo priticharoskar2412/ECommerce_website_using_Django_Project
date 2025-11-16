@@ -6,13 +6,14 @@ from django.contrib import messages
 from django.db import transaction
 from django.core.paginator import Paginator
 from decimal import Decimal
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Payment
 from .forms import OrderForm
 from products.models import Product
 from cart.views import get_cart
 
 
 import razorpay
+from razorpay.errors import SignatureVerificationError
 from django.conf import settings
 
 
@@ -239,29 +240,199 @@ def cancel_order(request, order_id):
 #         "key_id": settings.RAZORPAY_KEY_ID
 #     })
 
-def start_payment(request):
-    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+@login_required
+def start_payment(request, order_id):
+    """Initiate payment for an order"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    # Check if order already has a completed payment
+    if order.payment_status:
+        messages.info(request, 'This order has already been paid.')
+        return redirect('orders:detail', order_id=order.id)
+    
+    # Check if payment method requires gateway
+    if order.payment_method == 'cod':
+        # For COD, create a payment record with completed status
+        payment = Payment.objects.create(
+            order=order,
+            amount=order.total,
+            payment_method=order.payment_method,
+            payment_gateway='cod',
+            status='completed'
+        )
+        payment.mark_as_completed()
+        messages.success(request, 'Order placed successfully. Payment will be collected on delivery.')
+        return redirect('orders:detail', order_id=order.id)
+    
+    # For online payments, use Razorpay
+    try:
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
+        # Convert rupees to paise
+        amount_paise = int(order.total * 100)
+        
+        # Create Razorpay order
+        razorpay_order_data = {
+            "amount": amount_paise,
+            "currency": "INR",
+            "payment_capture": "1",
+            "notes": {
+                "order_id": order.id,
+                "order_number": order.order_number,
+            }
+        }
+        
+        razorpay_order = client.order.create(data=razorpay_order_data)
+        
+        # Create payment record
+        payment = Payment.objects.create(
+            order=order,
+            amount=order.total,
+            payment_method=order.payment_method,
+            payment_gateway='razorpay',
+            razorpay_order_id=razorpay_order['id'],
+            status='pending',
+            gateway_response=razorpay_order
+        )
+        
+        return render(request, "orders/payment.html", {
+            "order": order,
+            "payment": payment,
+            "razorpay_order_id": razorpay_order['id'],
+            "amount": amount_paise,
+            "amount_rupees": order.total,
+            "key_id": settings.RAZORPAY_KEY_ID,
+        })
+    except Exception as e:
+        messages.error(request, f'Payment initialization failed: {str(e)}')
+        return redirect('orders:detail', order_id=order.id)
 
-    # 1️⃣ Get the order you want to pay for
-    order_id = request.GET.get("order_id")
-    order = Order.objects.get(id=order_id)
 
-    # 2️⃣ Convert rupees → paise
-    amount_rupees = order.total
-    amount_paise = int(amount_rupees * 100)
+@login_required
+def payment_success(request):
+    """Handle successful payment callback from Razorpay"""
 
-    # 3️⃣ Create order in Razorpay
-    order_data = {
-        "amount": amount_paise,
-        "currency": "INR",
-        "payment_capture": "1",
-    }
+    # Razorpay sends GET request, not POST
+    if request.method in ['GET', 'POST']:
 
-    razorpay_order = client.order.create(data=order_data)
+        razorpay_payment_id = request.GET.get('razorpay_payment_id') or request.POST.get('razorpay_payment_id')
+        razorpay_order_id = request.GET.get('razorpay_order_id') or request.POST.get('razorpay_order_id')
+        razorpay_signature = request.GET.get('razorpay_signature') or request.POST.get('razorpay_signature')
 
-    return render(request, "orders/payment.html", {
-        "order_id": razorpay_order["id"],
-        "amount": amount_paise,
-        "amount_rupees": amount_rupees,
-        "key_id": settings.RAZORPAY_KEY_ID,
-    })
+        try:
+            payment = Payment.objects.get(
+                razorpay_order_id=razorpay_order_id
+            )
+
+            # Verify signature
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            params_dict = {
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature
+            }
+
+            try:
+                client.utility.verify_payment_signature(params_dict)
+
+                # Update payment
+                payment.razorpay_payment_id = razorpay_payment_id
+                payment.razorpay_signature = razorpay_signature
+                payment.status = 'processing'
+                payment.save()
+
+                # Fetch payment status
+                razorpay_payment = client.payment.fetch(razorpay_payment_id)
+
+                if razorpay_payment['status'] == 'captured':
+                    payment.mark_as_completed()
+                    payment.order.status = "PAID"          # 🔥 update order status
+                    payment.order.save()
+
+                    messages.success(request, f'Payment successful! Order {payment.order.order_number} confirmed.')
+                    return redirect('orders:detail', order_id=payment.order.id)
+                else:
+                    payment.status = 'failed'
+                    payment.failure_reason = f"Payment status: {razorpay_payment.get('status', 'unknown')}"
+                    payment.save()
+
+                    payment.order.status = "FAILED"
+                    payment.order.save()
+
+                    messages.error(request, 'Payment verification failed.')
+                    return redirect('orders:detail', order_id=payment.order.id)
+
+            except SignatureVerificationError:
+                payment.mark_as_failed("Signature verification failed")
+                payment.order.status = "FAILED"
+                payment.order.save()
+
+                messages.error(request, 'Payment verification failed.')
+                return redirect('orders:detail', order_id=payment.order.id)
+
+        except Payment.DoesNotExist:
+            messages.error(request, 'Payment record not found.')
+            return redirect('orders:list')
+
+    return redirect('orders:list')
+
+
+
+@login_required
+def payment_failure(request):
+    """Handle failed payment callback"""
+    if request.method == 'POST':
+        razorpay_order_id = request.POST.get('razorpay_order_id')
+        error_description = request.POST.get('error_description', 'Payment failed')
+        
+        try:
+            payment = Payment.objects.get(
+                razorpay_order_id=razorpay_order_id,
+                status__in=['pending', 'processing']
+            )
+            payment.mark_as_failed(error_description)
+            messages.error(request, f'Payment failed: {error_description}')
+            return redirect('orders:detail', order_id=payment.order.id)
+        except Payment.DoesNotExist:
+            messages.error(request, 'Payment record not found.')
+            return redirect('orders:list')
+    
+    return redirect('orders:list')
+
+
+class PaymentHistoryView(LoginRequiredMixin, View):
+    """View payment history for a user"""
+    template_name = 'orders/payment_history.html'
+    
+    def get(self, request):
+        if request.user.is_staff:
+            payments = Payment.objects.all().order_by('-created_at')
+        else:
+            payments = Payment.objects.filter(order__user=request.user).order_by('-created_at')
+        
+        paginator = Paginator(payments, 10)
+        page_obj = paginator.get_page(request.GET.get('page'))
+        
+        return render(request, self.template_name, {
+            'payments': page_obj,
+            'page_title': 'Payment History'
+        })
+
+
+class PaymentDetailView(LoginRequiredMixin, View):
+    """View payment details"""
+    template_name = 'orders/payment_detail.html'
+    
+    def get(self, request, payment_id):
+        payment = get_object_or_404(Payment, id=payment_id)
+        
+        # Check permissions
+        if not request.user.is_staff and payment.order.user != request.user:
+            messages.error(request, 'Permission denied.')
+            return redirect('orders:payment_history')
+        
+        return render(request, self.template_name, {
+            'payment': payment,
+            'order': payment.order,
+            'page_title': f'Payment {payment.payment_id}'
+        })

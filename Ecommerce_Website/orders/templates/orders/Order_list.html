@@ -41,6 +41,7 @@
                     <td>{{ order.created_at|date:"M d, Y" }}</td>
                 !    <td>
                         <a href="{% url 'orders:detail' order.id %}" class="btn btn-sm btn-primary">View</a>
+                        <a href="{% url 'orders:payment_history' %}" class="btn btn-sm btn-primary">History</a>
                     </td>
                 </tr>
                 {% endfor %}

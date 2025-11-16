@@ -87,6 +87,10 @@ class Order(models.Model):
             'refunded': 'secondary',
         }
         return status_classes.get(self.status, 'secondary')
+    
+    def get_status_display_class(self):
+        """Alias for get_status_badge_class for template compatibility"""
+        return self.get_status_badge_class()
 
 
 class OrderItem(models.Model):
@@ -111,3 +115,93 @@ class OrderItem(models.Model):
     
     def __str__(self):
         return f"{self.quantity}x {self.product.name} - Order {self.order.order_number}"
+
+
+class Payment(models.Model):
+    """Payment transactions for orders"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    PAYMENT_GATEWAY_CHOICES = [
+        ('razorpay', 'Razorpay'),
+        ('stripe', 'Stripe'),
+        ('paypal', 'PayPal'),
+        ('cod', 'Cash on Delivery'),
+        ('manual', 'Manual'),
+    ]
+    
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
+    payment_id = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique payment transaction ID")
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True, help_text="Razorpay order ID")
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True, help_text="Razorpay payment ID")
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True, help_text="Razorpay signature for verification")
+    
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    currency = models.CharField(max_length=3, default='INR')
+    
+    payment_method = models.CharField(max_length=20, choices=Order.PAYMENT_METHOD_CHOICES)
+    payment_gateway = models.CharField(max_length=20, choices=PAYMENT_GATEWAY_CHOICES, default='razorpay')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Payment gateway response data (JSON)
+    gateway_response = models.JSONField(default=dict, blank=True, null=True, help_text="Full response from payment gateway")
+    
+    failure_reason = models.TextField(blank=True, null=True, help_text="Reason for payment failure if any")
+    
+    paid_at = models.DateTimeField(null=True, blank=True, help_text="When payment was successfully completed")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['payment_id']),
+            models.Index(fields=['order', '-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['razorpay_order_id']),
+        ]
+    
+    def save(self, *args, **kwargs):
+        if not self.payment_id:
+            # Generate unique payment ID
+            timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+            random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            self.payment_id = f'PAY-{timestamp}-{random_str}'
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Payment {self.payment_id} - Order {self.order.order_number} - {self.get_status_display()}"
+    
+    def get_status_badge_class(self):
+        """Return Bootstrap class for status badge"""
+        status_classes = {
+            'pending': 'warning',
+            'processing': 'info',
+            'completed': 'success',
+            'failed': 'danger',
+            'cancelled': 'secondary',
+            'refunded': 'secondary',
+        }
+        return status_classes.get(self.status, 'secondary')
+    
+    def mark_as_completed(self):
+        """Mark payment as completed"""
+        self.status = 'completed'
+        self.paid_at = timezone.now()
+        self.order.payment_status = True
+        self.order.save()
+        self.save()
+    
+    def mark_as_failed(self, reason=None):
+        """Mark payment as failed"""
+        self.status = 'failed'
+        if reason:
+            self.failure_reason = reason
+        self.save()

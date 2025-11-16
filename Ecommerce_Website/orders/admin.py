@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Payment
 
 
 class OrderItemInline(admin.TabularInline):
@@ -54,3 +54,34 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
     search_fields = ('order__order_number', 'product__name', 'product__sku')
     readonly_fields = ('subtotal', 'created_at')
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    """Admin interface for Payment model"""
+    list_display = ('payment_id', 'order', 'amount', 'payment_method', 'payment_gateway', 'status', 'created_at', 'paid_at')
+    list_filter = ('status', 'payment_method', 'payment_gateway', 'created_at')
+    search_fields = ('payment_id', 'order__order_number', 'razorpay_order_id', 'razorpay_payment_id', 'order__user__username')
+    readonly_fields = ('payment_id', 'created_at', 'updated_at', 'paid_at', 'gateway_response')
+    
+    fieldsets = (
+        ('Payment Information', {
+            'fields': ('payment_id', 'order', 'amount', 'currency', 'status', 'created_at', 'updated_at', 'paid_at')
+        }),
+        ('Payment Method', {
+            'fields': ('payment_method', 'payment_gateway')
+        }),
+        ('Razorpay Details', {
+            'fields': ('razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature'),
+            'classes': ('collapse',)
+        }),
+        ('Additional Information', {
+            'fields': ('failure_reason', 'gateway_response'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Editing an existing object
+            return self.readonly_fields + ('order', 'amount', 'currency', 'payment_method', 'payment_gateway')
+        return self.readonly_fields
