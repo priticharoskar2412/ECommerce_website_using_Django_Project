@@ -62,10 +62,11 @@
                             <button type="submit" class="btn btn-primary w-100">Add to Cart</button>
                         
                          </form><br><br>
-                        <form action="{% url 'cart:add_to_cart' product.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary w-100">❤️ Add to Wishlist</button>
-                        </form>
+                        <form action="{% url 'products:add_to_wishlist' product.id %}" method="post" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-outline-danger">❤️ Wishlist</button>
+</form>
+
                     </div>
                 </div>
             </div>
