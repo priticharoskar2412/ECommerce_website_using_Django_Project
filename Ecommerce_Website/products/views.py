@@ -108,8 +108,8 @@ class WishlistView(LoginRequiredMixin, View):
 
     def get_queryset(self):
         return WishlistItem.objects.filter(user=self.request.user).select_related('product')    
-    @login_required
-    def AddToWishlistView(request, product_id):
+@login_required
+def AddToWishlistView(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
     wishlist_item, created = WishlistItem.objects.get_or_create(
@@ -123,10 +123,8 @@ class WishlistView(LoginRequiredMixin, View):
         wishlist_item.delete()
         messages.info(request, "Removed from wishlist!")
 
-    return redirect(request.META.get("HTTP_REFERER", "wishlist"))
-
-
-
+    return redirect(request.META.get("HTTP_REFERER", "products:wishlist"))
+   
 
    
 
