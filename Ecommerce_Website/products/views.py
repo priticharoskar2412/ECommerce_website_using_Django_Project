@@ -4,11 +4,11 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Product, Category,WishlistItem
+from .models import Product, Category
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Product, WishlistItem
+
 
 # List all products
 # class HomeView(View):
@@ -98,33 +98,4 @@ class ProductDeleteView(DeleteView):
     template_name = 'products/delete_product.html'
     success_url = reverse_lazy('products:product_list')
 
-
-class WishlistView(LoginRequiredMixin, View):
-    def get(self, request):
-        items = WishlistItem.objects.filter(user=request.user)
-        return render(request, "wishlist.html", {"items": items})
-
-
-
-    def get_queryset(self):
-        return WishlistItem.objects.filter(user=self.request.user).select_related('product')    
-@login_required
-def AddToWishlistView(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-
-    wishlist_item, created = WishlistItem.objects.get_or_create(
-        user=request.user,
-        product=product
-    )
-
-    if created:
-        messages.success(request, "Added to wishlist!")
-    else:
-        wishlist_item.delete()
-        messages.info(request, "Removed from wishlist!")
-
-    return redirect(request.META.get("HTTP_REFERER", "products:wishlist"))
-   
-
-   
 

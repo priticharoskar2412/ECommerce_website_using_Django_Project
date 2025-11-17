@@ -53,19 +53,34 @@
                         </p>
                         <!-- Show product info here -->
 
-                        <h4>Customer Reviews</h4>
-                        <a href="{% url 'reviews:product_reviews' product.id %}" class="btn btn-outline-secondary">View All
-                            Reviews</a>
-
                         <form action="{% url 'cart:add_to_cart' product.id %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary w-100">Add to Cart</button>
-                        
-                         </form><br><br>
-                        <form action="{% url 'products:add_to_wishlist' product.id %}" method="post" style="display:inline;">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-outline-danger">❤️ Wishlist</button>
-</form>
+
+                            <!-- </form><br><br>
+                        <div class="text-center mt-2">
+                            <a href="{% url 'wishlist:add' product.id %}" class="btn btn-outline-danger btn-sm">
+                                ❤️ Wishlist
+                            </a>
+                        </div> -->
+                            <div class="d-flex justify-content-center gap-3 my-3">
+
+                                <!-- View Reviews Button -->
+                                <a href="{% url 'reviews:product_reviews' product.id %}"
+                                    class="btn btn-outline-secondary px-4 py-2 rounded-3 shadow-sm">
+                                    ⭐ View Reviews
+                                </a>
+
+                                <!-- Wishlist Button -->
+                                <a href="{% url 'wishlist:add' product.id %}"
+                                    class="btn btn-outline-danger px-4 py-2 rounded-3 shadow-sm">
+                                    ❤️ Wishlist
+                                </a>
+
+                            </div>
+
+
+
 
                     </div>
                 </div>

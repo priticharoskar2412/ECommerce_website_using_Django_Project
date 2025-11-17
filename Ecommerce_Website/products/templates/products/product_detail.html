@@ -14,21 +14,25 @@
       <h4>₹{{ product.price }}</h4>
 
       <a href="/reviews/add/{{ product.id }}/" class="btn btn-outline-primary mb-3">Write a Review</a>
+      <!-- <a href="{% url 'wishlist:add' product.id %}" class="btn btn-outline-danger">
+        ❤️ Add to Wishlist
+      </a> -->
+
 
       <hr>
       <h4>Customer Reviews</h4>
 
       {% if reviews %}
-        {% for review in reviews %}
-          <div class="border p-3 rounded mb-3">
-            <strong>{{ review.user.username }}</strong>
-            <span class="text-warning">⭐ {{ review.rating }}/5</span><br>
-            <p>{{ review.comment }}</p>
-            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
-          </div>
-        {% endfor %}
+      {% for review in reviews %}
+      <div class="border p-3 rounded mb-3">
+        <strong>{{ review.user.username }}</strong>
+        <span class="text-warning">⭐ {{ review.rating }}/5</span><br>
+        <p>{{ review.comment }}</p>
+        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+      </div>
+      {% endfor %}
       {% else %}
-        <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+      <p class="text-muted">No reviews yet. Be the first to review this product!</p>
       {% endif %}
     </div>
   </div>

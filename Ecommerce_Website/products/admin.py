@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, WishlistItem
+from .models import Category, Product
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -18,10 +18,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ('available',)
 
 
-@admin.register(WishlistItem)
-class WishlistItemAdmin(admin.ModelAdmin):
-    list_display = ('user', 'product', 'added_at')
-    list_filter = ('user', 'product')
+
 
 
 
