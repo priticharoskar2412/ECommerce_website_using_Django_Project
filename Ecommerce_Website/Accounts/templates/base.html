@@ -14,8 +14,7 @@
     <style>
         body {
             background-color: #f8f9fa;
-            padding-top: 76px;
-            /* Add padding to account for fixed navbar */
+            padding-top: 76px; /* Add padding to account for fixed navbar */
         }
 
         /* Modern Navbar Styling */
@@ -134,12 +133,7 @@
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'products:product_list' %}">Products</a></li>
-                    <li class="nav-item">
-                        <a href="{% url 'wishlist:wishlist' %}" class="nav-link">
-                            Wishlist ❤️ ({{ request.user.wishlist_items.count }})
-                        </a>
-                    </li>
-
+                    
                     <!-- 🛒 Cart Icon -->
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="{% url 'cart:cart_view' %}">
@@ -168,8 +162,7 @@
     {% block carousel %}
     <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
         <div class="carousel-indicators">
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"
-                aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
             <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
             <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
         </div>

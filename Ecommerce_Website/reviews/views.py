@@ -30,10 +30,24 @@ def add_review(request, product_id):
     return render(request, 'reviews/add_review.html', {'form': form, 'product': product})
 
 
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    reviews = product.reviews.all().order_by('-created_at')[:5]  # show only 5 latest reviews
+    form = ReviewForm()
+
+    return render(request, 'products/product_detail.html', {
+        'product': product,
+        'reviews': reviews,
+        'form': form,
+    })
+
+
 def product_reviews(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     reviews = product.reviews.all().order_by('-created_at')
-    return render(request, 'products/product_detail.html', {
+
+    return render(request, 'reviews/review_list.html', {
         'product': product,
         'reviews': reviews
     })
+
