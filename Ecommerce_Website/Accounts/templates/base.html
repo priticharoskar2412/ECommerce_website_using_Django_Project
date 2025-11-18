@@ -133,6 +133,12 @@
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'products:product_list' %}">Products</a></li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'wishlist:wishlist' %}" class="nav-link">
+                            Wishlist ❤️ ({{ request.user.wishlist_items.count }})
+                        </a>
+                    </li>
                     
                     <!-- 🛒 Cart Icon -->
                     <li class="nav-item position-relative">
