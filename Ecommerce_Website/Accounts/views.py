@@ -11,8 +11,8 @@ from django.core.mail import send_mail
 import random
 from products.models import Category
 
-from .models import PasswordResetOTP
-from .forms import RegisterForm, LoginForm, ForgotPasswordForm, OTPForm, ResetPasswordForm
+from .models import PasswordResetOTP, FeedBack
+from .forms import RegisterForm, LoginForm, ForgotPasswordForm, OTPForm, ResetPasswordForm, FeedbackForm
 
 User = get_user_model()
 
@@ -241,3 +241,23 @@ class ProfileView(LoginRequiredMixin, View):
             'cart_total': cart_total,
         }
         return render(request, self.template_name, context)
+    
+    
+class FeedbackView(LoginRequiredMixin, View):
+    template_name = 'accounts/feedback.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': FeedbackForm()})
+
+    def post(self, request):
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.user = request.user   # attach logged-in user
+            feedback.save()
+            messages.success(request, 'Thank you for your feedback!')
+            return redirect('profile')
+
+        return render(request, self.template_name, {'form': form})
+
+

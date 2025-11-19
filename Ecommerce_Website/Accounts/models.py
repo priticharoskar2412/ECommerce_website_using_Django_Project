@@ -14,3 +14,16 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.otp}"
+
+
+class FeedBack(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Feedback from {self.user.email} - {self.subject}"   
+
+
+
