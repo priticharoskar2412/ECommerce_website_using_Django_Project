@@ -121,12 +121,35 @@ a:hover .trend-card {
 }
 
 /* Footer Section */
+/* Footer Section */
 .footer {
     background: #212529;
     color: #ddd;
-    padding: 30px 0;
-    text-align: center;
-    border-radius: 20px 20px 0 0;
+    padding: 60px 0 30px;
+    margin-top: 80px;
+}
+.footer a {
+    color: #aaa;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+.footer a:hover {
+    color: #0d6efd;
+}
+.footer .footer-links a {
+    display: block;
+    margin-bottom: 8px;
+}
+.footer .social-icons a {
+    font-size: 1.5rem;
+    margin: 0 10px;
+}
+.footer .copyright {
+    border-top: 1px solid #444;
+    margin-top: 40px;
+    padding-top: 20px;
+    font-size: 0.9rem;
+    color: #999;
 }
 </style>
 
@@ -309,6 +332,61 @@ a:hover .trend-card {
 
     </div>
 </div>
+
+<!-- ======================== FOOTER ======================== -->
+<footer class="footer">
+    
+    <div class="container">
+        <div class="row g-5">
+            <!-- Brand / About -->
+            <div class="col-lg-4">
+                <h4 class="text-white mb-4">Dressify</h4>
+                <p>Your one-stop fashion destination for trendy, affordable, and high-quality clothing.</p>
+                <div class="social-icons mt-3">
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-twitter"></i></a>
+                    <a href="#"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-lg-2 col-md-6">
+                <h5 class="text-white mb-4">Quick Links</h5>
+                <div class="footer-links">
+                    <a href="{% url 'products:product_list' %}">All Products</a>
+                    <a href="#">New Arrivals</a>
+                    <a href="#">Best Sellers</a>
+                    <a href="#">Sale</a>
+                </div>
+            </div>
+
+            <!-- Customer Care -->
+            <div class="col-lg-2 col-md-6">
+                <h5 class="text-white mb-4">Customer Care</h5>
+                <div class="footer-links">
+                    <a href="#">Contact Us</a>
+                    <a href="#">Shipping Info</a>
+                    <a href="#">Returns & Exchanges</a>
+                    <a href="#">Size Guide</a>
+                    <a href="#">FAQ</a>
+                </div>
+            </div>
+
+            <!-- Newsletter -->
+            <div class="col-lg-4">
+                <h5 class="text-white mb-4">Stay Updated</h5>
+                <p>Get the latest trends & exclusive offers straight to your inbox.</p>
+                <form class="d-flex mt-3">
+                    <input type="email" class="form-control me-2" placeholder="Your email" required>
+                    <button class="btn btn-primary" type="submit">Subscribe</button>
+                </form>
+            </div>
+        </div>
+
+        
+    </div>
+</footer>
 
 
 {% endblock %}
