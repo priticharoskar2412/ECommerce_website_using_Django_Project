@@ -15,6 +15,23 @@
                     <h5>Shipping Information</h5>
                 </div>
                 <div class="card-body">
+                    {% if saved_address %}
+                    <div class="alert alert-secondary d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold mb-1">Using saved address</div>
+                            <div>{{ saved_address.address_line }}</div>
+                            <div>{{ saved_address.city }}, {{ saved_address.state }} - {{ saved_address.zip_code }}</div>
+                            <div>{{ saved_address.country }}</div>
+                            <div class="mt-2">Phone: {{ saved_address.phone_number }}</div>
+                        </div>
+                        <a href="{{ address_change_url }}" class="btn btn-sm btn-outline-primary">Change address</a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>No saved address yet. Fill the form below to save it for next time.</div>
+                        <a href="{{ address_change_url }}" class="btn btn-sm btn-light">Add address</a>
+                    </div>
+                    {% endif %}
                     <form method="post" id="orderForm">
                         {% csrf_token %}
 

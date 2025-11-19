@@ -5,11 +5,13 @@ from django.views import View
 from django.contrib import messages
 from django.db import transaction
 from django.core.paginator import Paginator
+from django.urls import reverse
 from decimal import Decimal
 from .models import Order, OrderItem, Payment
 from .forms import OrderForm
 from products.models import Product
 from cart.views import get_cart
+from Accounts.models import UserAddress
 
 
 import razorpay
@@ -23,7 +25,9 @@ class OrderCreateView(LoginRequiredMixin, View):
     template_name = 'orders/order_create.html'
     
     def get(self, request):
-        form = OrderForm()
+        user_address = getattr(request.user, 'address', None)
+        initial_data = user_address.to_order_initial() if user_address else {}
+        form = OrderForm(initial=initial_data)
         # Build cart summary for the checkout page
         cart = get_cart(request)
         cart_items_qs = cart.items.select_related('product') if cart else None
@@ -66,6 +70,8 @@ class OrderCreateView(LoginRequiredMixin, View):
         shipping_cost = Decimal('50.00') if subtotal > 0 else Decimal('0.00')
         total = subtotal + tax + shipping_cost
 
+        change_address_url = f"{reverse('address_update')}?next={request.path}"
+
         return render(request, self.template_name, {
             'form': form,
             'page_title': 'Checkout',
@@ -74,6 +80,8 @@ class OrderCreateView(LoginRequiredMixin, View):
             'tax': tax,
             'shipping_cost': shipping_cost,
             'total': total,
+            'saved_address': user_address,
+            'address_change_url': change_address_url,
         })
     
     @transaction.atomic
@@ -130,13 +138,25 @@ class OrderCreateView(LoginRequiredMixin, View):
         
         tax = subtotal * Decimal('0.10')
         shipping_cost = Decimal('50.00')
-        
         order = form.save(commit=False)
         order.user = request.user
         order.subtotal = subtotal
         order.tax = tax
         order.shipping_cost = shipping_cost
         order.save()
+
+        # Persist address for future checkouts
+        UserAddress.objects.update_or_create(
+            user=request.user,
+            defaults={
+                'address_line': form.cleaned_data['shipping_address'],
+                'city': form.cleaned_data['shipping_city'],
+                'state': form.cleaned_data['shipping_state'],
+                'zip_code': form.cleaned_data['shipping_zip_code'],
+                'country': form.cleaned_data['shipping_country'],
+                'phone_number': form.cleaned_data['shipping_phone'],
+            }
+        )
         
         for item in items_data:
             OrderItem.objects.create(

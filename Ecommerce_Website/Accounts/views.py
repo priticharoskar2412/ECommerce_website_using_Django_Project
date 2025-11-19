@@ -8,11 +8,20 @@ from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.utils import timezone
 from django.core.mail import send_mail
+from django.utils.http import url_has_allowed_host_and_scheme
 import random
 from products.models import Category
 
-from .models import PasswordResetOTP, FeedBack
-from .forms import RegisterForm, LoginForm, ForgotPasswordForm, OTPForm, ResetPasswordForm, FeedbackForm
+from .models import PasswordResetOTP, FeedBack, UserAddress
+from .forms import (
+    RegisterForm,
+    LoginForm,
+    ForgotPasswordForm,
+    OTPForm,
+    ResetPasswordForm,
+    FeedbackForm,
+    UserAddressForm,
+)
 
 User = get_user_model()
 
@@ -234,11 +243,14 @@ class ProfileView(LoginRequiredMixin, View):
             cart_item_count = 0
             cart_total = 0
         
+        address = getattr(request.user, 'address', None)
+
         context = {
             'user': request.user,
             'cart': cart,
             'cart_item_count': cart_item_count,
             'cart_total': cart_total,
+            'address': address,
         }
         return render(request, self.template_name, context)
     
@@ -259,5 +271,44 @@ class FeedbackView(LoginRequiredMixin, View):
             return redirect('profile')
 
         return render(request, self.template_name, {'form': form})
+
+
+class AddressUpdateView(LoginRequiredMixin, View):
+    template_name = 'Accounts/address_form.html'
+
+    def get_next_url(self, request):
+        next_url = request.POST.get('next') or request.GET.get('next')
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            return next_url
+        return None
+
+    def get(self, request):
+        address = getattr(request.user, 'address', None)
+        form = UserAddressForm(instance=address)
+        context = {
+            'form': form,
+            'next': self.get_next_url(request),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        address = getattr(request.user, 'address', None)
+        form = UserAddressForm(request.POST, instance=address)
+
+        if form.is_valid():
+            user_address = form.save(commit=False)
+            user_address.user = request.user
+            user_address.save()
+            messages.success(request, 'Address saved successfully.')
+            next_url = self.get_next_url(request)
+            if next_url:
+                return redirect(next_url)
+            return redirect('profile')
+
+        context = {
+            'form': form,
+            'next': self.get_next_url(request),
+        }
+        return render(request, self.template_name, context)
 
 
