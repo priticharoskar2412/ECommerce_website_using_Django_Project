@@ -24,12 +24,14 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    size = models.CharField(max_length=30, blank=True, help_text="Selected size (e.g., S, M, L)")
 
     class Meta:
-        unique_together = ('cart', 'product')
+        unique_together = ('cart', 'product', 'size')
 
     def __str__(self):
-        return f"{self.product.name} ({self.quantity})"
+        size_label = f" - {self.size}" if self.size else ""
+        return f"{self.product.name}{size_label} ({self.quantity})"
 
     def get_total(self):
         price = self.product.discount_price or self.product.price

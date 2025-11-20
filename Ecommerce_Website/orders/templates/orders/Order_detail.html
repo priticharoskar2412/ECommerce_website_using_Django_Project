@@ -29,6 +29,7 @@
                             <thead>
                                 <tr>
                                     <th>Product</th>
+                                    <th>Size</th>
                                     <th>Price</th>
                                     <th>Quantity</th>
                                     <th class="text-end">Subtotal</th>
@@ -41,6 +42,7 @@
                                         <strong>{{ item.product.name }}</strong><br>
                                         <small class="text-muted">SKU: {{ item.product.sku }}</small>
                                     </td>
+                                    <td>{{ item.size|default:"-" }}</td>
                                     <td>₹{{ item.price }}</td>
                                     <td>{{ item.quantity }}</td>
                                     <td class="text-end">₹{{ item.subtotal }}</td>

@@ -32,13 +32,30 @@ class AddToCartView(View):
     def post(self, request, product_id):
         cart = get_cart(request)
         product = get_object_or_404(Product, id=product_id)
+        available_sizes = product.get_size_options()
+        selected_size = (request.POST.get("size") or "").strip()
 
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+        if available_sizes:
+            if not selected_size:
+                messages.error(request, "Please select a size before adding this product to your cart.")
+                return redirect("products:product_detail", pk=product.pk)
+            if selected_size not in available_sizes:
+                messages.error(request, "Invalid size selected for this product.")
+                return redirect("products:product_detail", pk=product.pk)
+        else:
+            selected_size = ""
+
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            size=selected_size
+        )
         if not created:
             cart_item.quantity += 1
             cart_item.save()
 
-        messages.success(request, f"{product.name} added to your cart.")
+        size_message = f" (Size {selected_size})" if selected_size else ""
+        messages.success(request, f"{product.name}{size_message} added to your cart.")
         return redirect("cart:cart_view")
 
 

@@ -98,6 +98,7 @@ class OrderItem(models.Model):
     
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='order_items')
+    size = models.CharField(max_length=30, blank=True, help_text="Selected size for this item")
     
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
@@ -114,7 +115,8 @@ class OrderItem(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.quantity}x {self.product.name} - Order {self.order.order_number}"
+        size_label = f" ({self.size})" if self.size else ""
+        return f"{self.quantity}x {self.product.name}{size_label} - Order {self.order.order_number}"
 
 
 class Payment(models.Model):

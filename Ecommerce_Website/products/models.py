@@ -41,6 +41,11 @@ class Product(models.Model):
     brand = models.CharField(max_length=100, blank=True, null=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated tags for search")
+    available_sizes = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Comma-separated sizes like XS,S,M,L,XL"
+    )
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,4 +66,12 @@ class Product(models.Model):
         if self.discount_price and self.price > 0:
             return round(((self.price - self.discount_price) / self.price) * 100, 2)
         return 0
+
+    def get_size_options(self):
+        if not self.available_sizes:
+            return []
+        return [size.strip() for size in self.available_sizes.split(',') if size.strip()]
+
+    def has_size_options(self):
+        return bool(self.get_size_options())
 

@@ -46,7 +46,8 @@ class OrderCreateView(LoginRequiredMixin, View):
                     'product': product,
                     'quantity': quantity,
                     'price': price,
-                    'subtotal': item_subtotal
+                    'subtotal': item_subtotal,
+                    'size': ci.size
                 })
         else:
             session_cart = request.session.get('cart', {})
@@ -61,7 +62,8 @@ class OrderCreateView(LoginRequiredMixin, View):
                         'product': product,
                         'quantity': quantity,
                         'price': price,
-                        'subtotal': item_subtotal
+                        'subtotal': item_subtotal,
+                        'size': item_data.get('size', '')
                     })
                 except Product.DoesNotExist:
                     continue
@@ -107,7 +109,8 @@ class OrderCreateView(LoginRequiredMixin, View):
                     'product': product,
                     'quantity': quantity,
                     'price': price,
-                    'subtotal': item_subtotal
+                    'subtotal': item_subtotal,
+                    'size': ci.size
                 })
         else:
             # Fallback to session-based cart (legacy or anonymous carts stored in session)
@@ -127,7 +130,8 @@ class OrderCreateView(LoginRequiredMixin, View):
                         'product': product,
                         'quantity': quantity,
                         'price': price,
-                        'subtotal': item_subtotal
+                        'subtotal': item_subtotal,
+                        'size': item_data.get('size', '')
                     })
                 except Product.DoesNotExist:
                     continue
@@ -164,7 +168,8 @@ class OrderCreateView(LoginRequiredMixin, View):
                 product=item['product'],
                 quantity=item['quantity'],
                 price=item['price'],
-                subtotal=item['subtotal']
+                subtotal=item['subtotal'],
+                size=item.get('size', '')
             )
         # Clear the cart: remove cart items if using the Cart model, otherwise clear session cart
         try:

@@ -78,7 +78,7 @@ class CategoryProductsView(ListView):
 class ProductCreateView(CreateView):
     model = Product
     fields = ['category', 'name', 'sku', 'description', 'price', 'discount_price',
-              'stock', 'available', 'brand', 'image', 'tags', 'rating']
+             'stock', 'available', 'brand', 'image', 'tags', 'available_sizes', 'rating']
     template_name = 'products/add_product.html'
     success_url = reverse_lazy('products:product_list')
 
@@ -87,7 +87,7 @@ class ProductCreateView(CreateView):
 class ProductUpdateView(UpdateView):
     model = Product
     fields = ['category', 'name', 'sku', 'description', 'price', 'discount_price',
-              'stock', 'available', 'brand', 'image', 'tags', 'rating']
+             'stock', 'available', 'brand', 'image', 'tags', 'available_sizes', 'rating']
     template_name = 'products/update_product.html'
     success_url = reverse_lazy('products:product_list')
 

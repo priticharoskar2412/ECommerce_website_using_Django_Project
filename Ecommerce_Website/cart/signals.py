@@ -28,6 +28,7 @@ def merge_session_cart_into_user_cart(sender, user, request, **kwargs):
             user_item, created = CartItem.objects.get_or_create(
                 cart=user_cart,
                 product=session_item.product,
+                size=session_item.size,
                 defaults={"quantity": session_item.quantity},
             )
             if not created:
