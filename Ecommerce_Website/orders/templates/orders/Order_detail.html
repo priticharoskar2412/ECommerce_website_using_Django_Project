@@ -93,7 +93,8 @@
                 <div class="card-body">
                     <p class="mb-1"><strong>Address:</strong></p>
                     <p class="mb-1">{{ order.shipping_address }}</p>
-                    <p class="mb-1">{{ order.shipping_city }}, {{ order.shipping_state }} - {{ order.shipping_zip_code }}</p>
+                    <p class="mb-1">{{ order.shipping_city }}, {{ order.shipping_state }} - {{ order.shipping_zip_code
+                        }}</p>
                     <p class="mb-1">{{ order.shipping_country }}</p>
                     <p class="mb-0"><strong>Phone:</strong> {{ order.shipping_phone }}</p>
                 </div>
@@ -106,11 +107,11 @@
                 <div class="card-body">
                     <p class="mb-1"><strong>Method:</strong> {{ order.get_payment_method_display }}</p>
                     <p class="mb-0">
-                        <strong>Status:</strong> 
+                        <strong>Status:</strong>
                         {% if order.payment_status %}
-                            <span class="badge bg-success">Paid</span>
+                        <span class="badge bg-success">Paid</span>
                         {% else %}
-                            <span class="badge bg-warning">Pending</span>
+                        <span class="badge bg-warning">Pending</span>
                         {% endif %}
                     </p>
                 </div>
@@ -119,7 +120,8 @@
             {% if order.status != 'cancelled' and order.status != 'delivered' and order.status != 'refunded' %}
             <div class="card">
                 <div class="card-body">
-                    <form method="post" action="{% url 'orders:cancel_order' order.id %}" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                    <form method="post" action="{% url 'orders:cancel_order' order.id %}"
+                        onsubmit="return confirm('Are you sure you want to cancel this order?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger w-100">Cancel Order</button>
                     </form>
@@ -128,14 +130,21 @@
             {% endif %}
         </div>
     </div>
-
     <div class="row mt-3">
         <div class="col-md-12">
             <a href="{% url 'orders:list' %}" class="btn btn-secondary">Back to Orders</a>
+
+            <a href="{% url 'orders:invoice' order.id %}" class="btn btn-success ms-2">
+                View Invoice
+            </a>
+
             {% if not order.payment_status %}
-            <a href="{% url 'orders:start_payment' order.id %}" class="btn btn-primary float-end">Make Payment</a>
+            <a href="{% url 'orders:start_payment' order.id %}" class="btn btn-primary float-end">
+                Make Payment
+            </a>
             {% endif %}
         </div>
     </div>
+
 </div>
 {% endblock %}

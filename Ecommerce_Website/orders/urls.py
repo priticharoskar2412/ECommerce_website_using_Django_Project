@@ -16,4 +16,6 @@ urlpatterns = [
     path('payment/failure/', views.payment_failure, name='payment_failure'),
     path('payments/', views.PaymentHistoryView.as_view(), name='payment_history'),
     path('payment/<int:payment_id>/', views.PaymentDetailView.as_view(), name='payment_detail'),
+
+    path('invoice/<int:order_id>/', views.invoice, name='invoice'),
 ]

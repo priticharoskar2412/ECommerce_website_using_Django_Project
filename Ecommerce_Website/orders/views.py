@@ -461,3 +461,22 @@ class PaymentDetailView(LoginRequiredMixin, View):
             'order': payment.order,
             'page_title': f'Payment {payment.payment_id}'
         })
+    
+
+
+@login_required
+def invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    order_items = OrderItem.objects.filter(order=order)
+
+    # Add total price (quantity × product price) for each item
+    total_amount = 0
+    for item in order_items:
+        item.total_price = item.quantity * item.product.price
+        total_amount += item.total_price
+
+    return render(request, "orders/invoice.html", {
+        "order": order,
+        "order_items": order_items,
+        "total_amount": total_amount,
+    })
