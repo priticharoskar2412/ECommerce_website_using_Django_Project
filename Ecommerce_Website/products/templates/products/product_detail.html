@@ -10,55 +10,39 @@
     </div>
 
     <div class="col-md-7">
-      <h2>{{ product.name }}</h2>
+      <h2>Product Name: {{ product.name }}</h2>
+      <h3>BRAND: {{ product.brand }}</h3>
       <p>{{ product.description }}</p>
       <h4>₹{{ product.price }}</h4>
-      
-      <div class="d-flex gap-3 mt-3">
-    <a href="/reviews/add/{{ product.id }}/" class="btn btn-outline-primary">
-        Write a Review
-    </a>
 
-      <form action="{% url 'cart:add_to_cart' product.id %}" method="post" class="mt-3">
+      <!-- ✅ SIZE ON TOP -->
+      <form action="{% url 'cart:add_to_cart' product.id %}" method="post" class="m-0">
         {% csrf_token %}
+
         {% if product.get_size_options %}
         <div class="mb-3">
           <label class="form-label d-block">Select Size</label>
-          <div class="btn-group" role="group" aria-label="Select product size">
+          <div class="btn-group" role="group">
             {% for size in product.get_size_options %}
             <input type="radio" class="btn-check" name="size" id="size-{{ forloop.counter }}" value="{{ size }}" autocomplete="off">
-            <label class="btn btn-outline-secondary" for="size-{{ forloop.counter }}">{{ size }}</label>
+            <label class="btn btn-outline-success" for="size-{{ forloop.counter }}">{{ size }}</label>
             {% endfor %}
           </div>
-          <small class="text-muted d-block mt-1">Choose a size to continue.</small>
         </div>
         {% else %}
         <input type="hidden" name="size" value="">
         {% endif %}
-        <button type="submit" class="btn btn-primary">Add to Cart</button>
+
+        <!-- ✅ BUTTONS IN ONE LINE -->
+        <div class="d-flex gap-3 align-items-center mt-3">
+          <a href="/reviews/add/{{ product.id }}/" class="btn btn-outline-primary">
+            Write a Review
+          </a>
+
+          <button type="submit" class="btn btn-primary">Add to Cart</button>
+        </div>
       </form>
 
-      {% comment %} <a href="/reviews/add/{{ product.id }}/" class="btn btn-outline-primary mb-3">Write a Review</a> {% endcomment %}
-      <!-- <a href="{% url 'wishlist:add' product.id %}" class="btn btn-outline-danger">
-        ❤️ Add to Wishlist
-      </a> -->
-
-
-      <hr>
-      <!-- <h4>Customer Reviews</h4>
-
-      {% if reviews %}
-      {% for review in reviews %}
-      <div class="border p-3 rounded mb-3">
-        <strong>{{ review.user.username }}</strong>
-        <span class="text-warning">⭐ {{ review.rating }}/5</span><br>
-        <p>{{ review.comment }}</p>
-        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
-      </div>
-      {% endfor %}
-      {% else %}
-      <p class="text-muted">No reviews yet. Be the first to review this product!</p>
-      {% endif %} -->
     </div>
   </div>
 </div>
