@@ -480,3 +480,14 @@ def invoice(request, order_id):
         "order_items": order_items,
         "total_amount": total_amount,
     })
+
+def save(self, *args, **kwargs):
+    self.shipping_cost = Decimal('0.00')  # FORCE shipping = 0 always
+    
+    if not self.order_number:
+        self.order_number = generate_order_number()
+
+    # Always re-calculate total
+    self.total = self.subtotal + self.tax + self.shipping_cost
+    
+    super().save(*args, **kwargs)
